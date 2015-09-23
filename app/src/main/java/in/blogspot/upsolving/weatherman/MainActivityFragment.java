@@ -5,6 +5,11 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -17,6 +22,24 @@ public class MainActivityFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 							 Bundle savedInstanceState) {
-		return inflater.inflate(R.layout.fragment_main, container, false);
+		View v = inflater.inflate(R.layout.fragment_main, container, false);
+
+		String[] dummyData = new String[]{
+				"Today Stormy 28/16",
+				"Tomorrow Sunny 32/12",
+				"Wed Snow 12/23",
+				"Thurs Hailstrom 33/23",
+				"Fri go to hell 120/00"
+		};
+
+		//creating an ARRAY ADAPTER
+		ArrayList<String> dummyDataList = new ArrayList<>(Arrays.asList(dummyData));
+		ArrayAdapter adapter = new ArrayAdapter(getContext(), R.layout.list_item_forecast, R.id.list_item_forecast_textview,  dummyDataList);
+
+		//now we have to link the adapter to list_view
+		ListView listItems = (ListView) v.findViewById(R.id.listview_forecast);
+		listItems.setAdapter(adapter);
+
+		return v;
 	}
 }
