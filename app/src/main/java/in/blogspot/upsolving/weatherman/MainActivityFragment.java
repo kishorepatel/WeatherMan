@@ -24,21 +24,23 @@ public class MainActivityFragment extends Fragment {
 							 Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.fragment_main, container, false);
 
-		String[] dummyData = new String[]{
+		String[] forecastArray = new String[]{
 				"Today Stormy 28/16",
 				"Tomorrow Sunny 32/12",
 				"Wed Snow 12/23",
 				"Thurs Hailstrom 33/23",
-				"Fri go to hell 120/00"
+				"Fri go to hell 120/00",
+				"Sat Rainy ",
+				"Sun Sunny"
 		};
 
 		//creating an ARRAY ADAPTER
-		ArrayList<String> dummyDataList = new ArrayList<>(Arrays.asList(dummyData));
-		ArrayAdapter adapter = new ArrayAdapter(getContext(), R.layout.list_item_forecast, R.id.list_item_forecast_textview,  dummyDataList);
+		ArrayList<String> weekForecast = new ArrayList<>(Arrays.asList(forecastArray));
+		ArrayAdapter mForeCastAdapter = new ArrayAdapter(getContext(), R.layout.list_item_forecast, R.id.list_item_forecast_textview,  weekForecast);
 
 		//now we have to link the adapter to list_view
 		ListView listItems = (ListView) v.findViewById(R.id.listview_forecast);
-		listItems.setAdapter(adapter);
+		listItems.setAdapter(mForeCastAdapter);
 
 		return v;
 	}
