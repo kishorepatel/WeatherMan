@@ -1,5 +1,12 @@
 <resources>
     <string name="app_name">WeatherMan</string>
+
+    <!-- strings in FRAGMENT_MAIN.xml -->
     <string name="hello_world">Hello world!</string>
+
+
+
+
+
     <string name="action_settings">Settings</string>
 </resources>
