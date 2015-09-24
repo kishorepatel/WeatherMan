@@ -50,6 +50,7 @@ public class ForecastFragment extends Fragment {
 		ListView listItems = (ListView) v.findViewById(R.id.listview_forecast);
 		listItems.setAdapter(mForeCastAdapter);
 
+		new FetchWeatherTask().execute("http://api.openweathermap.org/data/2.5/forecast/daily?q=chennai,in&mode=json&cnt=7");
 
 		return v;
 	}//onCreateView
@@ -57,7 +58,9 @@ public class ForecastFragment extends Fragment {
 
 
 
-	private class FetchWeatherTask extends AsyncTask<String, Void, Void>{
+	public class FetchWeatherTask extends AsyncTask<String, Void, Void>{
+		private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
+
 		@Override
 		protected Void doInBackground(String... params) {
 			HttpURLConnection urlConnection = null;
@@ -89,10 +92,9 @@ public class ForecastFragment extends Fragment {
 				}
 
 				forecastJsonString = buffer.toString();
-				Log.v("JSON: " , forecastJsonString);
 			}
 			catch(IOException e){
-				Log.e("In FetchWeatherTask: " , "Error: ", e);
+				Log.e(LOG_TAG , "Error: ", e);
 			}
 			finally{
 				if(urlConnection != null){
@@ -103,7 +105,7 @@ public class ForecastFragment extends Fragment {
 						reader.close();
 					}
 					catch(IOException e){
-						Log.e("In FetchWeatherTask: ", "Error closing stream: " , e);
+						Log.e(LOG_TAG , "Error closing stream: " , e);
 					}
 				}
 			}
