@@ -9,5 +9,8 @@
 
 
 
+    <!-- forecastfragment -->
+    <string name="action_refresh" translatable="false" >Refresh</string>
+
     <string name="action_settings">Settings</string>
 </resources>
