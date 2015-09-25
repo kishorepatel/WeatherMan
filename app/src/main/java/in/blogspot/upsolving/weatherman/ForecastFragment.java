@@ -1,7 +1,10 @@
 package in.blogspot.upsolving.weatherman;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,8 +14,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,7 +40,7 @@ import java.util.GregorianCalendar;
  * A placeholder fragment containing a simple view.
  */
 public class ForecastFragment extends Fragment {
-	ArrayAdapter mForeCastAdapter;
+	private static ArrayAdapter mForecastAdapter;
 
 	public ForecastFragment() {
 	}
@@ -55,46 +61,60 @@ public class ForecastFragment extends Fragment {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		int itemID = (int) item.getItemId();
 		if(itemID == R.id.action_refresh){
-			FetchWeatherTask fetchWeatherTask = new FetchWeatherTask();
-			fetchWeatherTask.execute("94043");
+			updateWeather();
 			return true;
 		}
 
 		return super.onOptionsItemSelected(item);
 	}
 
+	public void updateWeather(){
+		FetchWeatherTask fetchWeatherTask = new FetchWeatherTask();
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+		String location = preferences.getString(getString(R.string.pref_location_key), getString(R.string.pref_default_location));
+		fetchWeatherTask.execute(location);
+	}
 
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 							 Bundle savedInstanceState) {
-		View v = inflater.inflate(R.layout.fragment_main, container, false);
 
-		String[] forecastArray = new String[]{
-				"Today Stormy 28/16",
-				"Tomorrow Sunny 32/12",
-				"Wed Snow 12/23",
-				"Thurs Hailstrom 33/23",
-				"Fri go to hell 120/00",
-				"Sat Rainy ",
-				"Sun Sunny"
-		};
 
 		//creating an ARRAY ADAPTER
-		ArrayList<String> weekForecast = new ArrayList<>(Arrays.asList(forecastArray));
-		mForeCastAdapter = new ArrayAdapter(getContext(), R.layout.list_item_forecast, R.id.list_item_forecast_textview,  weekForecast);
+		mForecastAdapter = new ArrayAdapter(
+				getContext(),
+				R.layout.list_item_forecast,
+				R.id.list_item_forecast_textview,
+				new ArrayList<>());
+
+
+		View v = inflater.inflate(R.layout.fragment_main, container, false);
+
 
 		//now we have to link the adapter to list_view
 		ListView listItems = (ListView) v.findViewById(R.id.listview_forecast);
-		listItems.setAdapter(mForeCastAdapter);
+		listItems.setAdapter(mForecastAdapter);
+
+		listItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				String content = mForecastAdapter.getItem(position).toString();
+				Intent intent = new Intent(getActivity(), DetailActivity.class)
+						.putExtra(Intent.EXTRA_TEXT, content);
+				startActivity(intent);
+			}
+		});
 
 		return v;
 	}//onCreateView
 
 
-
-
-
+	@Override
+	public void onStart() {
+		super.onStart();
+		updateWeather();
+	}
 
 	//-----------------------------------------------------------------------------------------------------------------------------
 	public class FetchWeatherTask extends AsyncTask<String, Void, String[]>{
@@ -137,8 +157,11 @@ public class ForecastFragment extends Fragment {
 				urlConnection.setRequestMethod("GET");
 				urlConnection.connect(); //this line creates lot of trouble
 
+				Log.v(LOG_TAG, "Connected HTTP");
+
 				InputStream inputStream = urlConnection.getInputStream();
 				if(inputStream == null){
+					Log.v(LOG_TAG, "inputstrams is null");
 					return null;
 				}
 
@@ -151,21 +174,23 @@ public class ForecastFragment extends Fragment {
 				}
 
 				if(buffer.length() == 0){
+					Log.v(LOG_TAG, "buffer is null");
 					return null;
 				}
 
 				forecastJsonString = buffer.toString();
-				//Log.v("JSON: ", forecastJsonString);
+				Log.v("JSON: ", forecastJsonString);
+
 				try{
 					return getForecastDataFromJson(forecastJsonString, numDays);
 				}
 				catch(JSONException e){
-					Log.e(LOG_TAG, "calling getForecstDataFromJson", e);
+					Log.e(LOG_TAG, "calling getForecstDataFromJson" + e);
 				}
 
 			}
 			catch(IOException e){
-				Log.e(LOG_TAG , "Error: ", e);
+				Log.e(LOG_TAG , "Error: "+ e);
 			}
 			finally{
 				if(urlConnection != null){
@@ -176,7 +201,7 @@ public class ForecastFragment extends Fragment {
 						reader.close();
 					}
 					catch(IOException e){
-						Log.e(LOG_TAG , "Error closing stream: " , e);
+						Log.e(LOG_TAG , "Error closing stream: " + e);
 					}
 				}
 			}
@@ -188,8 +213,11 @@ public class ForecastFragment extends Fragment {
 		@Override
 		protected void onPostExecute(String[] strings) {
 			super.onPostExecute(strings);
-			mForeCastAdapter.clear();
-			mForeCastAdapter.addAll(Arrays.asList(strings));
+			if(strings == null){
+				Log.v(LOG_TAG,"strings is null");
+			}
+			mForecastAdapter.clear();
+			mForecastAdapter.addAll(Arrays.asList(strings));
 		}
 
 		//------parsing JSON-------
@@ -201,7 +229,6 @@ public class ForecastFragment extends Fragment {
 			final String OWM_MIN = "min";
 			final String OWM_DESCRIPTION = "main";
 			String[] resultStr = new String[numDays];
-
 
 				JSONObject forecastJson = new JSONObject(forecastJsonString);
 				JSONArray weatherArray = forecastJson.getJSONArray(OWM_LIST);
@@ -238,8 +265,18 @@ public class ForecastFragment extends Fragment {
 		}//getForecastDataFromJson
 
 		private String formatHighLows(String max, String min){
-			int imax = (int) Math.round(Double.parseDouble(max));
-			int imin = (int) Math.round(Double.parseDouble(min));
+			SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+			String unitType = preferences.getString(getString(R.string.pref_unit_key), getString(R.string.pref_default_unit));
+
+			double dmax = Double.parseDouble(max);
+			double dmin = Double.parseDouble(min);
+			if(!unitType.equals(getString(R.string.pref_default_unit))){
+				dmax = (dmax * 1.8) + 32;
+				dmin = (dmin * 1.8) + 32;
+			}
+
+			int imax = (int) Math.round(dmax);
+			int imin = (int) Math.round(dmin);
 			return imax + "/" + imin;
 		}
 
