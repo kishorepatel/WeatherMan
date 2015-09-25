@@ -149,7 +149,7 @@ public class ForecastFragment extends Fragment {
 						.appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
 						.build();
 
-				Log.v("CHECK URIBuilder: " , buildUri.toString());
+				//Log.v("CHECK URIBuilder: " , buildUri.toString());
 
 				//NOTE: when using execute() method => please pass url as first param
 				URL url = new URL(buildUri.toString());
@@ -157,11 +157,11 @@ public class ForecastFragment extends Fragment {
 				urlConnection.setRequestMethod("GET");
 				urlConnection.connect(); //this line creates lot of trouble
 
-				Log.v(LOG_TAG, "Connected HTTP");
+				//Log.v(LOG_TAG, "Connected HTTP");
 
 				InputStream inputStream = urlConnection.getInputStream();
 				if(inputStream == null){
-					Log.v(LOG_TAG, "inputstrams is null");
+				//	Log.v(LOG_TAG, "inputstrams is null");
 					return null;
 				}
 
@@ -174,7 +174,7 @@ public class ForecastFragment extends Fragment {
 				}
 
 				if(buffer.length() == 0){
-					Log.v(LOG_TAG, "buffer is null");
+				//	Log.v(LOG_TAG, "buffer is null");
 					return null;
 				}
 
@@ -214,7 +214,7 @@ public class ForecastFragment extends Fragment {
 		protected void onPostExecute(String[] strings) {
 			super.onPostExecute(strings);
 			if(strings == null){
-				Log.v(LOG_TAG,"strings is null");
+				//Log.v(LOG_TAG,"strings is null");
 			}
 			mForecastAdapter.clear();
 			mForecastAdapter.addAll(Arrays.asList(strings));
