@@ -188,8 +188,8 @@ public class SettingsActivity extends PreferenceActivity {
 			// updated to reflect the new value, per the Android Design
 			// guidelines.
 
-			bindPreferenceSummaryToValue(findPreference("example_text"));
-			bindPreferenceSummaryToValue(findPreference("example_list"));
+			//bindPreferenceSummaryToValue(findPreference("example_text"));
+			//bindPreferenceSummaryToValue(findPreference("example_list"));
 			bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_location_key)));
 			bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_unit_key)));
 		}
@@ -199,6 +199,8 @@ public class SettingsActivity extends PreferenceActivity {
 	 * This fragment shows notification preferences only. It is used when the
 	 * activity is showing a two-pane settings UI.
 	 */
+	/*
+
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class NotificationPreferenceFragment extends PreferenceFragment {
 		@Override
@@ -214,10 +216,14 @@ public class SettingsActivity extends PreferenceActivity {
 		}
 	}
 
+*/
+
 	/**
 	 * This fragment shows data and sync preferences only. It is used when the
 	 * activity is showing a two-pane settings UI.
 	 */
+
+	/*
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class DataSyncPreferenceFragment extends PreferenceFragment {
 		@Override
@@ -232,4 +238,5 @@ public class SettingsActivity extends PreferenceActivity {
 			bindPreferenceSummaryToValue(findPreference("sync_frequency"));
 		}
 	}
+	*/
 }
