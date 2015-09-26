@@ -36,6 +36,10 @@
                 android:value="in.blogspot.upsolving.weatherman.MainActivity" />
         </activity>
 
+        <provider
+            android:authorities="com.blogspot.upsolving.android.WeatherMan.app"
+            android:name=".data.WeatherProvider" />
+
     </application>
 
 </manifest>
