@@ -1,13 +1,11 @@
 package in.blogspot.upsolving.weatherman;
 
+
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,24 +15,9 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.GregorianCalendar;
+
 
 /**
  * A placeholder fragment containing a simple view.
@@ -69,7 +52,7 @@ public class ForecastFragment extends Fragment {
 	}
 
 	public void updateWeather(){
-		FetchWeatherTask fetchWeatherTask = new FetchWeatherTask();
+		FetchWeatherTask fetchWeatherTask = new FetchWeatherTask(getActivity(), mForecastAdapter);
 		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
 		String location = preferences.getString(getString(R.string.pref_location_key), getString(R.string.pref_default_location));
 		fetchWeatherTask.execute(location);
@@ -116,172 +99,4 @@ public class ForecastFragment extends Fragment {
 		updateWeather();
 	}
 
-	//-----------------------------------------------------------------------------------------------------------------------------
-	public class FetchWeatherTask extends AsyncTask<String, Void, String[]>{
-		private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
-
-		@Override
-		protected String[] doInBackground(String... params) {
-			HttpURLConnection urlConnection = null;
-			BufferedReader reader = null;
-			String forecastJsonString = null;
-
-			if(params.length == 0){
-				return null;
-			}
-
-			String units = "metric";
-			String format = "json";
-			int numDays = 7;
-			try{
-
-				final String FORECAST_BASE_URL = "http://api.openweathermap.org/data/2.5/forecast/daily?";
-				final String QUERY_PARAM = "q";
-				final String FORMAT_PARAM = "mode";
-				final String UNITS_PARAM = "units";
-				final String DAYS_PARAM = "cnt";
-
-
-				Uri buildUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
-						.appendQueryParameter(QUERY_PARAM, params[0])
-						.appendQueryParameter(FORMAT_PARAM, format)
-						.appendQueryParameter(UNITS_PARAM, units)
-						.appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
-						.build();
-
-				//Log.v("CHECK URIBuilder: " , buildUri.toString());
-
-				//NOTE: when using execute() method => please pass url as first param
-				URL url = new URL(buildUri.toString());
-				urlConnection = (HttpURLConnection) url.openConnection();
-				urlConnection.setRequestMethod("GET");
-				urlConnection.connect(); //this line creates lot of trouble
-
-				//Log.v(LOG_TAG, "Connected HTTP");
-
-				InputStream inputStream = urlConnection.getInputStream();
-				if(inputStream == null){
-				//	Log.v(LOG_TAG, "inputstrams is null");
-					return null;
-				}
-
-				reader = new BufferedReader(new InputStreamReader(inputStream));
-				StringBuffer buffer = new StringBuffer();
-				String line = "";
-
-				while((line = reader.readLine()) != null){
-					buffer.append(line + "\n");
-				}
-
-				if(buffer.length() == 0){
-				//	Log.v(LOG_TAG, "buffer is null");
-					return null;
-				}
-
-				forecastJsonString = buffer.toString();
-				Log.v("JSON: ", forecastJsonString);
-
-				try{
-					return getForecastDataFromJson(forecastJsonString, numDays);
-				}
-				catch(JSONException e){
-					Log.e(LOG_TAG, "calling getForecstDataFromJson" + e);
-				}
-
-			}
-			catch(IOException e){
-				Log.e(LOG_TAG , "Error: "+ e);
-			}
-			finally{
-				if(urlConnection != null){
-					urlConnection.disconnect();
-				}
-				if(reader != null){
-					try{
-						reader.close();
-					}
-					catch(IOException e){
-						Log.e(LOG_TAG , "Error closing stream: " + e);
-					}
-				}
-			}
-
-			return null;
-		}//doInBackGround
-
-
-		@Override
-		protected void onPostExecute(String[] strings) {
-			super.onPostExecute(strings);
-			if(strings == null){
-				//Log.v(LOG_TAG,"strings is null");
-			}
-			mForecastAdapter.clear();
-			mForecastAdapter.addAll(Arrays.asList(strings));
-		}
-
-		//------parsing JSON-------
-		private String[] getForecastDataFromJson(String forecastJsonString, int numDays) throws JSONException{
-			final String OWM_LIST = "list";
-			final String OWM_WEATHER = "weather";
-			final String OWM_TEMPERATURE = "temp";
-			final String OWM_MAX = "max";
-			final String OWM_MIN = "min";
-			final String OWM_DESCRIPTION = "main";
-			String[] resultStr = new String[numDays];
-
-				JSONObject forecastJson = new JSONObject(forecastJsonString);
-				JSONArray weatherArray = forecastJson.getJSONArray(OWM_LIST);
-
-				for (int i = 0; i < numDays; i++) {
-					String day;
-					String description;
-					String highandlow;
-
-
-					JSONObject dayForecast = weatherArray.getJSONObject(i);
-
-					//day
-					GregorianCalendar calendar = new GregorianCalendar();
-					calendar.add(GregorianCalendar.DATE, i);
-					Date time = calendar.getTime();
-					SimpleDateFormat shortenedDateFormat = new SimpleDateFormat("EEE MMM dd");
-					day = shortenedDateFormat.format(time);
-
-					//weather description
-					JSONObject weatherForecast = dayForecast.getJSONArray(OWM_WEATHER).getJSONObject(0);
-					description = weatherForecast.getString(OWM_DESCRIPTION);
-
-					//temperature
-					JSONObject temperatureForecast = dayForecast.getJSONObject(OWM_TEMPERATURE);
-					String max = temperatureForecast.getString(OWM_MAX);
-					String min = temperatureForecast.getString(OWM_MIN);
-					highandlow = formatHighLows(max, min);
-
-					resultStr[i] = day + " - " + description + " - " + highandlow;
-				}
-
-			return resultStr;
-		}//getForecastDataFromJson
-
-		private String formatHighLows(String max, String min){
-			SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-			String unitType = preferences.getString(getString(R.string.pref_unit_key), getString(R.string.pref_default_unit));
-
-			double dmax = Double.parseDouble(max);
-			double dmin = Double.parseDouble(min);
-			if(!unitType.equals(getString(R.string.pref_default_unit))){
-				dmax = (dmax * 1.8) + 32;
-				dmin = (dmin * 1.8) + 32;
-			}
-
-			int imax = (int) Math.round(dmax);
-			int imin = (int) Math.round(dmin);
-			return imax + "/" + imin;
-		}
-
-
-
-	}//FetchWeatherTask
-	//----------------------------------------------------------------------------------------------------------------------------
 }
